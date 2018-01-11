@@ -6,9 +6,7 @@
  to you under the Apache License, Version 2.0 (the
  "License"); you may not use this file except in compliance
  with the License.  You may obtain a copy of the License at
- 
  http://www.apache.org/licenses/LICENSE-2.0
- 
  Unless required by applicable law or agreed to in writing,
  software distributed under the License is distributed on an
  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -74,7 +72,7 @@
     // Determine whether rotation should be enabled for this device
     // Per iOS HIG, landscape is only supported on iPad and iPhone 6+
     CDV_iOSDevice device = [self getCurrentDevice];
-    BOOL autorotateValue = (device.iPad || device.iPhone6Plus) ?
+    BOOL autorotateValue = (device.iPad || device.iPhone6Plus || device.iPhoneX) ?
     [(CDVViewController *)self.viewController shouldAutorotateDefaultValue] :
     NO;
     
@@ -174,22 +172,9 @@
     // this is appropriate for detecting the runtime screen environment
     device.iPhone6 = (device.iPhone && limit == 667.0);
     device.iPhone6Plus = (device.iPhone && limit == 736.0);
+    device.iPhoneX  = (device.iPhone && limit == 812.0);
     
     return device;
-}
-
-- (BOOL) isIPhoneX {
-    CDV_iOSDevice device;
-    
-    UIScreen* mainScreen = [UIScreen mainScreen];
-    CGFloat mainScreenHeight = mainScreen.bounds.size.height;
-    CGFloat mainScreenWidth = mainScreen.bounds.size.width;
-    
-    device.iPhone = (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone);
-    
-    int limit = MAX(mainScreenHeight,mainScreenWidth);
-    
-    return (device.iPhone && limit == 812.0);
 }
 
 - (BOOL) isUsingCDVLaunchScreen {
@@ -236,8 +221,12 @@
             imageName = [imageName stringByAppendingString:@"-700"];
         } else if(device.iPhone6) {
             imageName = [imageName stringByAppendingString:@"-800"];
-        } else if(device.iPhone6Plus) {
-            imageName = [imageName stringByAppendingString:@"-800"];
+        } else if(device.iPhone6Plus || device.iPhoneX ) {
+            if(device.iPhone6Plus) {
+                imageName = [imageName stringByAppendingString:@"-800"];
+            } else {
+                imageName = [imageName stringByAppendingString:@"-1100"];
+            }
             if (currentOrientation == UIInterfaceOrientationPortrait || currentOrientation == UIInterfaceOrientationPortraitUpsideDown)
             {
                 imageName = [imageName stringByAppendingString:@"-Portrait"];
@@ -253,7 +242,7 @@
     { // does not support landscape
         imageName = [imageName stringByAppendingString:@"-667h"];
     }
-    else if (device.iPhone6Plus)
+    else if (device.iPhone6Plus || device.iPhoneX)
     { // supports landscape
         if (isOrientationLocked)
         {
@@ -271,22 +260,10 @@
                     break;
             }
         }
-        imageName = [imageName stringByAppendingString:@"-736h"];
-        
-    } else if ([self isIPhoneX]) { // case iPhone X
-        imageName = [imageName stringByAppendingString:@"-2436h"];
-        
-        if (!isOrientationLocked)
-        {
-            switch (currentOrientation)
-            {
-                case UIInterfaceOrientationLandscapeLeft:
-                case UIInterfaceOrientationLandscapeRight:
-                    imageName = [imageName stringByAppendingString:@"-Landscape"];
-                    break;
-                default:
-                    break;
-            }
+        if (device.iPhoneX) {
+            imageName = [imageName stringByAppendingString:@"-2436h"];
+        } else {
+            imageName = [imageName stringByAppendingString:@"-736h"];
         }
     }
     else if (device.iPad)
@@ -401,7 +378,7 @@
      * correctly.
      */
     CDV_iOSDevice device = [self getCurrentDevice];
-    if (UIInterfaceOrientationIsLandscape(orientation) && !device.iPhone6Plus && !device.iPad)
+    if (UIInterfaceOrientationIsLandscape(orientation) && !device.iPhone6Plus && !device.iPad && !device.iPhoneX)
     {
         imgTransform = CGAffineTransformMakeRotation(M_PI / 2);
         imgBounds.size = CGSizeMake(imgBounds.size.height, imgBounds.size.width);
