@@ -42,3 +42,4 @@ typedef struct {
 - (void)hide:(CDVInvokedUrlCommand*)command;
 
 @end
+
